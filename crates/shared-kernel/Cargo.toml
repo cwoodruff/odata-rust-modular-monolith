@@ -1,0 +1,30 @@
+[package]
+name = "shared-kernel"
+description = "Port of SharedKernel: module contract, cache facade, config, errors, traffic control."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+async-trait = { workspace = true }
+axum = { workspace = true }
+chrono = { workspace = true }
+dashmap = { workspace = true }
+figment = { workspace = true }
+moka = { workspace = true }
+rand = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+# For the request-scoped trace identifier, which is a task-local.
+tokio = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time"] }
+tower = { workspace = true }

@@ -1,1 +1,0 @@
-# odata-rust-modular-monolith
