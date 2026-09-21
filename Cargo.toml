@@ -1,0 +1,97 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+version = "1.0.0"
+edition = "2024"
+rust-version = "1.88"
+license = "MIT"
+repository = "https://github.com/cwoodruff/rust-api-modular-monolithic"
+
+# Central version policy for the whole port. Crates opt in with `workspace = true`
+# as each phase lands; see docs/rust-translation-plan.md for the phase map.
+[workspace.dependencies]
+# --- internal crates -------------------------------------------------------
+shared-kernel = { path = "crates/shared-kernel" }
+shared-persistence = { path = "crates/shared-persistence" }
+shared-data-sqlite = { path = "crates/shared-data-sqlite" }
+module-admin = { path = "crates/module-admin" }
+module-identity = { path = "crates/module-identity" }
+module-music = { path = "crates/module-music" }
+module-orders = { path = "crates/module-orders" }
+module-reporting = { path = "crates/module-reporting" }
+
+# --- host / HTTP -----------------------------------------------------------
+axum = "0.8"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
+tower = { version = "0.5", features = ["util"] }
+tower-http = { version = "0.6", features = [
+    "catch-panic",
+    "cors",
+    "normalize-path",
+    "set-header",
+    "trace",
+] }
+hyper = "1"
+
+# --- serialization ---------------------------------------------------------
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# --- data ------------------------------------------------------------------
+sqlx = { version = "0.8", default-features = false, features = [
+    "runtime-tokio",
+    "sqlite",
+    "chrono",
+    "macros",
+] }
+chrono = { version = "0.4", features = ["serde"] }
+# `serde-float` makes Decimal serialize as a JSON number, which is what
+# System.Text.Json does with C#'s decimal: `0.99`, not `"0.99"`. Decimal rather
+# than f64 keeps the money comparisons in the validators exact.
+rust_decimal = { version = "1", features = ["serde", "serde-float"] }
+
+# --- identity --------------------------------------------------------------
+jsonwebtoken = { version = "10", features = ["rust_crypto"] }
+rsa = { version = "0.9", features = ["sha2"] }
+base64 = "0.22"
+# Only for the RFC 7638 JWK thumbprint the PEM provider derives its `kid` from.
+sha2 = "0.10"
+# Held at 0.8 to match the rand_core version `rsa` 0.9 expects; the dev key
+# provider generates RSA-2048 through both.
+rand = "0.8"
+uuid = { version = "1", features = ["v4"] }
+
+# --- cross-cutting ---------------------------------------------------------
+moka = { version = "0.12", features = ["future"] }
+dashmap = "6"
+figment = { version = "0.10", features = ["json", "env"] }
+regex = "1"
+async-trait = "0.1"
+thiserror = "2"
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# --- OpenAPI (Phase 4) -----------------------------------------------------
+utoipa = { version = "5", features = ["axum_extras", "chrono"] }
+utoipa-swagger-ui = { version = "9", features = ["axum"] }
+
+# --- test-only -------------------------------------------------------------
+axum-test = "17"
+mockall = "0.13"
+pretty_assertions = "1"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+# Keeps the port honest about the error paths the C# original handled explicitly.
+unwrap_used = "warn"
+expect_used = "warn"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
